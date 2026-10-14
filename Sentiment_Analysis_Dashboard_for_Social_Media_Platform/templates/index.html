@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SentimentScope | Social Media Analytics</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-mark">S</span><div><strong>SentimentScope</strong><small>Social listening demo</small></div></div>
+    <div class="nav-label">WORKSPACE</div>
+    <a class="nav active" href="#overview">▦ &nbsp; Overview</a>
+    <a class="nav" href="#analyzer">✦ &nbsp; Text analyzer</a>
+    <a class="nav" href="#posts">▤ &nbsp; Post explorer</a>
+    <div class="side-note"><span class="pulse"></span> Demo data loaded <small>Sample posts only</small></div>
+    <div class="sidebar-foot">COLLEGE PROJECT · FLASK</div>
+  </aside>
+  <main class="main" id="overview">
+    <header class="topbar"><div><p class="eyebrow">SOCIAL MEDIA INTELLIGENCE</p><h1>Sentiment dashboard</h1><p class="subhead">Understand the mood behind social conversations.</p></div><div class="top-right"><span class="live-dot"></span> Demo workspace <div class="avatar">SS</div></div></header>
+    <section class="hero">
+      <div><div class="hero-tag">OVERVIEW <span>•</span> SAMPLE DATA</div><h2>Listen to the conversation.<br><em>Understand the feeling.</em></h2><p>Analyze sample social posts, explore sentiment patterns, and test your own text.</p><a class="hero-btn" href="#analyzer">Analyze a post <span>↗</span></a></div>
+      <div class="hero-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="orb">☺</div><div class="mini-card card-a">↗ <b>Positive</b><small>Good signals</small></div><div class="mini-card card-b">◌ <b>Neutral</b><small>Mixed signals</small></div><div class="mini-card card-c">↘ <b>Negative</b><small>Needs attention</small></div></div>
+    </section>
+    <section class="metrics">
+      <article class="metric"><div class="metric-top"><span>Total posts</span><span class="metric-icon blue">▤</span></div><div class="metric-value" id="total">{{ stats.total }}</div><div class="metric-foot">Analyzed in this view</div></article>
+      <article class="metric"><div class="metric-top"><span>Positive</span><span class="metric-icon green">↗</span></div><div class="metric-value" id="positive">{{ stats.positive }}</div><div class="metric-foot"><span class="green-text" id="positivePct">{{ stats.positive_pct }}%</span> of analyzed posts</div></article>
+      <article class="metric"><div class="metric-top"><span>Neutral</span><span class="metric-icon amber">—</span></div><div class="metric-value" id="neutral">{{ stats.neutral }}</div><div class="metric-foot"><span class="amber-text" id="neutralPct">{{ stats.neutral_pct }}%</span> of analyzed posts</div></article>
+      <article class="metric"><div class="metric-top"><span>Negative</span><span class="metric-icon red">↘</span></div><div class="metric-value" id="negative">{{ stats.negative }}</div><div class="metric-foot"><span class="red-text" id="negativePct">{{ stats.negative_pct }}%</span> of analyzed posts</div></article>
+    </section>
+    <section class="chart-grid">
+      <article class="panel"><div class="panel-head"><div><h3>Sentiment distribution</h3><p>How sample posts are classified</p></div><span class="tiny-chip">ALL POSTS</span></div><div class="donut-wrap"><canvas id="sentimentChart" aria-label="Sentiment distribution chart"></canvas><div class="donut-center"><strong id="donutTotal">{{ stats.total }}</strong><small>posts</small></div></div><div class="legend"><span><i class="legend-dot green-bg"></i> Positive <b id="legendPos">{{ stats.positive }}</b></span><span><i class="legend-dot amber-bg"></i> Neutral <b id="legendNeu">{{ stats.neutral }}</b></span><span><i class="legend-dot red-bg"></i> Negative <b id="legendNeg">{{ stats.negative }}</b></span></div></article>
+      <article class="panel"><div class="panel-head"><div><h3>Posts by platform</h3><p>Sample dataset coverage</p></div><span class="tiny-chip">CHANNELS</span></div><div class="bar-wrap"><canvas id="platformChart" aria-label="Posts by platform chart"></canvas></div><div class="insight"><span class="insight-icon">✦</span><div><b>What does this show?</b><p>Compare sentiment volume and platform coverage. This demo uses manually prepared sample data.</p></div></div></article>
+    </section>
+    <section class="panel analyzer" id="analyzer"><div class="section-title"><div><p class="eyebrow">TRY IT YOURSELF</p><h3>Analyze a social post</h3><p>Enter a caption, comment, review, or short message.</p></div><span class="spark">✦</span></div><form id="analyzeForm"><label for="postText">POST TEXT</label><textarea id="postText" maxlength="5000" placeholder="Example: The campus event was amazing and the organizers were helpful..." required></textarea><div class="form-bottom"><span id="charCount">0 / 5000 characters</span><button class="primary-btn" type="submit">Analyze sentiment <span>→</span></button></div></form><div id="analysisResult" class="analysis-result hidden" aria-live="polite"></div></section>
+    <section class="panel posts-panel" id="posts"><div class="panel-head posts-heading"><div><h3>Recent social posts</h3><p>Filter, search, or upload your own CSV dataset.</p></div><button class="outline-btn" id="exportBtn">↓ Export CSV</button></div><div class="toolbar"><input type="search" id="searchInput" placeholder="⌕  Search post text or author..."><select id="sentimentFilter" aria-label="Filter by sentiment"><option value="All">All sentiments</option><option>Positive</option><option>Neutral</option><option>Negative</option></select><select id="platformFilter" aria-label="Filter by platform"><option value="All">All platforms</option><option>Instagram</option><option>X</option><option>Facebook</option><option>YouTube</option><option>Other</option></select></div><div class="table-wrap"><table><thead><tr><th>POST / AUTHOR</th><th>PLATFORM</th><th>DATE</th><th>SENTIMENT</th><th>SCORE</th></tr></thead><tbody id="postsBody">{% for post in posts %}<tr data-sentiment="{{ post.sentiment }}" data-platform="{{ post.platform }}"><td><div class="post-cell"><div class="post-avatar">{{ post.author[:1]|upper }}</div><div><b>{{ post.author }}</b><p>{{ post.text }}</p></div></div></td><td>{{ post.platform }}</td><td>{{ post.date or '—' }}</td><td><span class="badge {{ post.sentiment|lower }}">{{ post.sentiment }}</span></td><td class="score">{{ '%+.2f'|format(post.score) }}</td></tr>{% endfor %}</tbody></table><div id="emptyState" class="empty-state hidden">No posts match your filters.</div></div><div class="table-footer"><span id="rowCount">{{ posts|length }} posts shown</span><label class="upload-btn" for="csvFile">↑ Upload CSV</label><input id="csvFile" type="file" accept=".csv,text/csv" hidden><span class="csv-help">CSV needs a <code>text</code> column.</span></div><div id="uploadMessage" class="upload-message" aria-live="polite"></div></section>
+    <footer>SentimentScope · Educational prototype · <span>Sentiment predictions are approximate, not a measure of truth.</span></footer>
+  </main>
+<script>
+let currentPosts = {{ posts|tojson }};
+const sentimentCtx = document.getElementById('sentimentChart');
+const platformCtx = document.getElementById('platformChart');
+let sentimentChart, platformChart;
+function countStats(posts) {
+  const counts = {Positive:0, Neutral:0, Negative:0}, platforms = {};
+  posts.forEach(p => { counts[p.sentiment] = (counts[p.sentiment] || 0) + 1; platforms[p.platform] = (platforms[p.platform] || 0) + 1; });
+  return {counts, platforms, total:posts.length};
+}
+function drawCharts(posts) {
+  const s = countStats(posts);
+  if (sentimentChart) sentimentChart.destroy();
+  sentimentChart = new Chart(sentimentCtx, {type:'doughnut', data:{labels:['Positive','Neutral','Negative'], datasets:[{data:[s.counts.Positive,s.counts.Neutral,s.counts.Negative],backgroundColor:['#20b486','#e9ad4f','#ed6b75'],borderWidth:0,hoverOffset:5}]}, options:{cutout:'76%', plugins:{legend:{display:false}}, maintainAspectRatio:false}});
+  if (platformChart) platformChart.destroy();
+  const entries = Object.entries(s.platforms);
+  platformChart = new Chart(platformCtx, {type:'bar',data:{labels:entries.map(e=>e[0]),datasets:[{label:'Posts',data:entries.map(e=>e[1]),backgroundColor:'#7774e8',borderRadius:6,maxBarThickness:34}]},options:{maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#81849a'}},y:{beginAtZero:true,ticks:{precision:0,color:'#81849a'},grid:{color:'#eff0f5'}}}}});
+  const pct = key => s.total ? Math.round(s.counts[key]*100/s.total) : 0;
+  document.getElementById('total').textContent=s.total; document.getElementById('donutTotal').textContent=s.total;
+  document.getElementById('positive').textContent=s.counts.Positive; document.getElementById('neutral').textContent=s.counts.Neutral; document.getElementById('negative').textContent=s.counts.Negative;
+  document.getElementById('positivePct').textContent=pct('Positive')+'%'; document.getElementById('neutralPct').textContent=pct('Neutral')+'%'; document.getElementById('negativePct').textContent=pct('Negative')+'%';
+  document.getElementById('legendPos').textContent=s.counts.Positive; document.getElementById('legendNeu').textContent=s.counts.Neutral; document.getElementById('legendNeg').textContent=s.counts.Negative;
+}
+function renderRows() {
+  const query=document.getElementById('searchInput').value.toLowerCase(), sent=document.getElementById('sentimentFilter').value, plat=document.getElementById('platformFilter').value;
+  const filtered=currentPosts.filter(p=>(p.text+' '+p.author).toLowerCase().includes(query)&&(sent==='All'||p.sentiment===sent)&&(plat==='All'||p.platform===plat));
+  document.getElementById('postsBody').innerHTML=filtered.map(p=>`<tr><td><div class="post-cell"><div class="post-avatar">${escapeHtml((p.author||'?').slice(0,1).toUpperCase())}</div><div><b>${escapeHtml(p.author||'Unknown')}</b><p>${escapeHtml(p.text)}</p></div></div></td><td>${escapeHtml(p.platform||'Other')}</td><td>${escapeHtml(p.date||'—')}</td><td><span class="badge ${p.sentiment.toLowerCase()}">${p.sentiment}</span></td><td class="score">${p.score>=0?'+':''}${Number(p.score).toFixed(2)}</td></tr>`).join('');
+  document.getElementById('emptyState').classList.toggle('hidden',filtered.length>0);
+  document.getElementById('rowCount').textContent=`${filtered.length} of ${currentPosts.length} posts shown`;
+}
+function escapeHtml(value) { return String(value).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+drawCharts(currentPosts); renderRows();
+['searchInput','sentimentFilter','platformFilter'].forEach(id=>document.getElementById(id).addEventListener(id==='searchInput'?'input':'change',renderRows));
+document.getElementById('postText').addEventListener('input',e=>document.getElementById('charCount').textContent=`${e.target.value.length} / 5000 characters`);
+document.getElementById('analyzeForm').addEventListener('submit',async e=>{
+  e.preventDefault(); const text=document.getElementById('postText').value.trim(), result=document.getElementById('analysisResult');
+  result.classList.remove('hidden'); result.innerHTML='<p>Analyzing…</p>';
+  try {
+    const response=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+    const data=await response.json(); if(!response.ok) throw new Error(data.error||'Analysis failed.');
+    result.innerHTML=`<div class="result-heading"><span class="badge ${data.sentiment.toLowerCase()}">${data.sentiment}</span><b>Sentiment result</b></div><p>${escapeHtml(data.text)}</p><div class="result-stats"><span>Score <b>${data.score>=0?'+':''}${data.score.toFixed(2)}</b></span><span>Positive word hits <b>${data.positive_hits}</b></span><span>Negative word hits <b>${data.negative_hits}</b></span></div><small>Lexicon-based demo estimate; sarcasm and context may be missed.</small>`;
+  } catch(err) { result.innerHTML=`<p class="error-text">${escapeHtml(err.message)}</p>`; }
+});
+document.getElementById('csvFile').addEventListener('change',async e=>{
+  const file=e.target.files[0]; if(!file)return; const msg=document.getElementById('uploadMessage'); msg.textContent='Uploading and analyzing…';
+  const form=new FormData(); form.append('file',file);
+  try {
+    const response=await fetch('/upload',{method:'POST',body:form}), data=await response.json(); if(!response.ok)throw new Error(data.error||'Upload failed.');
+    currentPosts=data.posts; drawCharts(currentPosts); renderRows(); msg.textContent=data.message+' (This dataset is held in the page only; reload to restore sample data.)';
+  } catch(err){msg.textContent=err.message; } finally {e.target.value='';}
+});
+document.getElementById('exportBtn').addEventListener('click',()=>{
+  const header=['platform','author','date','text','sentiment','score','positive_hits','negative_hits'];
+  const csv=[header.join(','),...currentPosts.map(p=>header.map(k=>'"'+String(p[k]??'').replace(/"/g,'""')+'"').join(','))].join('\r\n');
+  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'})); const a=document.createElement('a'); a.href=url; a.download='sentiment-analysis-results.csv'; a.click(); URL.revokeObjectURL(url);
+});
+</script>
+</body>
+</html>
